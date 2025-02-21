@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" id="html-to-pdf">
+  <!-- Background document shape -->
+  <path fill="#3b4652" d="M20 10h60l10 10v70H20z"/>
+  <path fill="#4a5568" d="M30 20h50v60H30z"/>
+  
+  <!-- HTML Symbol positioned within #4a5568 -->
+  <text x="35" y="35" font-family="Rubik" font-size="14" font-weight="bold" fill="white">HTML</text>
+  
+  <!-- Arrow transition centered within #4a5568 -->
+  <text x="35" y="55" font-family="Rubik" font-size="14" font-weight="bold" fill="white">To</text>
+  
+  <!-- PDF Text positioned within #4a5568 -->
+  <text x="35" y="75" font-family="Rubik" font-size="14" font-weight="bold" fill="white">PDF</text>
+</svg>

@@ -5,16 +5,18 @@ import type {
 	INodeTypeDescription,
 } from 'n8n-workflow';
 import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
+import * as pdf from 'html-pdf-node';
 
-export class ExampleNode implements INodeType {
+export class HtmlToPDF implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Example Node',
-		name: 'exampleNode',
+		displayName: 'Html To PDF',
+		name: 'htmltopdf',
+		icon: 'file:htmltopdf.svg',
 		group: ['transform'],
 		version: 1,
-		description: 'Basic Example Node',
+		description: 'Convert HTML content to PDF',
 		defaults: {
-			name: 'Example Node',
+			name: 'HtmlToPDF',
 		},
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
@@ -22,12 +24,20 @@ export class ExampleNode implements INodeType {
 			// Node properties which the user gets displayed and
 			// can change on the node.
 			{
-				displayName: 'My String',
-				name: 'myString',
+				displayName: 'HTML Content',
+				name: 'htmlContent',
 				type: 'string',
 				default: '',
-				placeholder: 'Placeholder value',
-				description: 'The description text',
+				placeholder: 'Add your HTML Content',
+				description:
+					'HTML content that needs to be converted to PDF. Only html content is supported',
+			},
+			{
+				displayName: 'Filename',
+				name: 'filename',
+				type: 'string',
+				default: 'output.pdf',
+				description: 'Name of the generated PDF file',
 			},
 		],
 	};
@@ -39,18 +49,46 @@ export class ExampleNode implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 
-		let item: INodeExecutionData;
-		let myString: string;
+		const returnData: INodeExecutionData[] = [];
+		let htmlContent: string;
 
 		// Iterates over all input items and add the key "myString" with the
 		// value the parameter "myString" resolves to.
 		// (This could be a different value for each item in case it contains an expression)
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
-				myString = this.getNodeParameter('myString', itemIndex, '') as string;
-				item = items[itemIndex];
+				htmlContent = this.getNodeParameter('htmlContent', itemIndex, '') as string;
+				const filename = this.getNodeParameter('filename', itemIndex) as string;
+				const options: pdf.Options = {
+					format: 'A4',
+					margin: {
+						top: 10,
+						right: 10,
+						bottom: 10,
+						left: 10,
+					},
+					printBackground: true,
+				};
+				const file: pdf.File = {
+					content: htmlContent,
+				};
 
-				item.json.myString = myString;
+				const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
+					pdf.generatePdf(file, options, (err, buffer) => {
+						if (err) reject(err);
+						else resolve(buffer);
+					});
+				});
+				returnData.push({
+					json: items[itemIndex].json,
+					binary: {
+						data: {
+							mimeType: 'application/pdf',
+							data: pdfBuffer.toString('base64'),
+							fileName: filename,
+						},
+					},
+				});
 			} catch (error) {
 				// This node should never fail but we want to showcase how
 				// to handle errors.
@@ -71,6 +109,6 @@ export class ExampleNode implements INodeType {
 			}
 		}
 
-		return [items];
+		return [returnData];
 	}
 }
